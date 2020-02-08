@@ -1,179 +1,211 @@
 <?php
 
-if(isset($_POST['login']))
+ob_start();
+session_start();
+
+if($_SESSION['name']!='oasis')
 {
-	//start of try block
 
-	try{
-
-		//checking empty fields
-		if(empty($_POST['username'])){
-			throw new Exception("Username is required!");
-			
-		}
-		if(empty($_POST['password'])){
-			throw new Exception("Password is required!");
-			
-		}
-		//establishing connection with db and things
-		include ('connect.php');
-		
-		//checking login info into database
-		$row=0;
-		$result=mysql_query("select * from admininfo where username='$_POST[username]' and password='$_POST[password]' and type='$_POST[type]'");
-
-		$row=mysql_num_rows($result);
-
-		if($row>0 && $_POST["type"] == 'teacher'){
-			session_start();
-			$_SESSION['name']="oasis";
-			header('location: teacher/index.php');
-		}
-
-		else if($row>0 &&  $_POST["type"] == 'student'){
-			session_start();
-			$_SESSION['name']="oasis";
-			header('location: student/index.php');
-		}
-
-		else if($row>0 && $_POST["type"] == 'admin'){
-			session_start();
-			$_SESSION['name']="oasis";
-			header('location: admin/index.php');
-		}
-
-		else{
-			throw new Exception("Username,Password or Role is wrong, try again!");
-			
-			header('location: login.php');
-		}
-	}
-
-	//end of try block
-	catch(Exception $e){
-		$error_msg=$e->getMessage();
-	}
-	//end of try-catch
+  header('location: ../index.php');
 }
-
 ?>
-
-<!DOCTYPE html>
-<html>
-<head>
-
-	<title>Online Attendance Management System</title>
-	<link rel="stylesheet" type="text/css" href="css/main.css">
-	<!-- Latest compiled and minified CSS -->
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" >
-	 
-	<!-- Optional theme -->
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" >
-	 
-	<link rel="stylesheet" href="styles.css" >
-	 
-	<!-- Latest compiled and minified JavaScript -->
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-
-</head>
-
-<body>
-	<center>
-
-<header>
-
-  <h1>Online Attendance Management System 1.0</h1>
-
-</header>
-
-<h1>Login</h1>
 
 <?php
-//printing error message
-if(isset($error_msg))
-{
-	echo $error_msg;
-}
-?>
 
-<!-- Old Version -->
-<!-- 
-<form action="" method="post">
-	
-	<table>
-		<tr>
-			<td>Username </td>
-			<td><input type="text" name="username"></input></td>
-		</tr>
-		<tr>
-			<td>Password</td>
-			<td><input type="password" name="password"></input></td>
-		</tr>
-		<tr>
-			<td>Role</td>
-			<td>
-			<select name="type">
-				<option name="teacher" value="teacher">Teacher</option>
-				<option name="student" value="student">Student</option>
-				<option name="admin" value="admin">Admin</option>
-			</select>
-			</td>
-		</tr>
-		<tr><td><br></td></tr>
-		<tr>
-			<td><button><input type="submit" name="login" value="Login"></input></button></td>
-			<td><button><input type="reset" name="reset" value="Reset"></button></td>
-		</tr>
-	</table>
-</form>
--->
+include('connect.php');
 
-<div class="content">
-	<div class="row">
+//data insertion
+  try{
 
-		<form method="post" class="form-horizontal col-md-6 col-md-offset-3">
-			<div class="form-group">
-			    <label for="input1" class="col-sm-3 control-label">Username</label>
-			    <div class="col-sm-7">
-			      <input type="text" name="username"  class="form-control" id="input1" placeholder="your username" />
-			    </div>
-			</div>
+    //checking if the data comes from students form
+    if(isset($_POST['std'])){
 
-			<div class="form-group">
-			    <label for="input1" class="col-sm-3 control-label">Password</label>
-			    <div class="col-sm-7">
-			      <input type="password" name="password"  class="form-control" id="input1" placeholder="your password" />
-			    </div>
-			</div>
+      //students data insertion to database table "students"
+        $result = mysql_query("insert into students(st_id,st_name,st_dept,st_batch,st_sem,st_email) values('$_POST[st_id]','$_POST[st_name]','$_POST[st_dept]','$_POST[st_batch]','$_POST[st_sem]','$_POST[st_email]')");
+        $success_msg = "Student added successfully.";
+
+    }
+
+        //checking if the data comes from teachers form
+        if(isset($_POST['tcr'])){
+
+          //teachers data insertion to the database table "teachers"
+          $res = mysql_query("insert into teachers(tc_id,tc_name,tc_dept,tc_email,tc_course) values('$_POST[tc_id]','$_POST[tc_name]','$_POST[tc_dept]','$_POST[tc_email]','$_POST[tc_course]')");
+          $success_msg = "Teacher added successfully.";
+    }
+
+  }
+  catch(Execption $e){
+    $error_msg =$e->getMessage();
+  }
+
+ ?>
 
 
-			<div class="form-group" class="radio">
-			<label for="input1" class="col-sm-3 control-label">Role</label>
-			<div class="col-sm-7">
-			  <label>
-			    <input type="radio" name="type" id="optionsRadios1" value="student" checked> Student
-			  </label>
-			  	  <label>
-			    <input type="radio" name="type" id="optionsRadios1" value="teacher"> Teacher
-			  </label>
-			  <label>
-			    <input type="radio" name="type" id="optionsRadios1" value="admin"> Admin
-			  </label>
-			</div>
-			</div>
 
+<!DOCTYPE html>
+<html lang="en">
+<!-- head started -->
+<head>
+<title>Online Attendance Management System 1.0</title>
+<meta charset="UTF-8">
 
-			<input type="submit" class="btn btn-primary col-md-3 col-md-offset-7" value="Login" name="login" />
-		</form>
-	</div>
+  <link rel="stylesheet" type="text/css" href="../css/main.css">
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" >
+   
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" >
+   
+  <link rel="stylesheet" href="styles.css" >
+   
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<style type="text/css">
+
+  .message{
+    padding: 10px;
+    font-size: 15px;
+    font-style: bold;
+    color: black;
+  }
+</style>
+</head>
+<!-- head ended -->
+
+<!-- body started -->
+<body>
+
+    <!-- Menus started-->
+    <header>
+
+      <h1>Online Attendance Management System 1.0</h1>
+      <div class="navbar">
+      <a href="signup.php">Create Users</a>
+      <a href="index.php">Add Data</a>
+      <a href="../logout.php">Logout</a>
+
+    </div>
+
+    </header>
+    <!-- Menus ended -->
+
+<center>
+<!-- Error or Success Message printint started -->
+<div class="message">
+        <?php if(isset($success_msg)) echo $success_msg; if(isset($error_msg)) echo $error_msg; ?>
 </div>
+<!-- Error or Success Message printint ended -->
+
+<!-- Content, Tables, Forms, Texts, Images started -->
+<div class="content">
+
+  <center> Select: <a href="#teacher">Teacher</a> | <a href="">Student</a> <br></center>
+
+  <div class="row" id="student">
 
 
 
-<br><br>
-<p><strong>Have forgot your password? <a href="reset.php">Reset here.</a></strong></p>
-<p><strong>If you don't have any account, <a href="signup.php">Signup</a> here</strong></p>
+      <form method="post" class="form-horizontal col-md-6 col-md-offset-3">
+      <h4>Add Student's Information</h4>
+      <div class="form-group">
+          <label for="input1" class="col-sm-3 control-label">Reg. No.</label>
+          <div class="col-sm-7">
+            <input type="text" name="st_id"  class="form-control" id="input1" placeholder="student reg. no." />
+          </div>
+      </div>
+
+      <div class="form-group">
+          <label for="input1" class="col-sm-3 control-label">Name</label>
+          <div class="col-sm-7">
+            <input type="text" name="st_name"  class="form-control" id="input1" placeholder="student full name" />
+          </div>
+      </div>
+
+      <div class="form-group">
+          <label for="input1" class="col-sm-3 control-label">Department</label>
+          <div class="col-sm-7">
+            <input type="text" name="st_dept"  class="form-control" id="input1" placeholder="department ex. CSE" />
+          </div>
+      </div>
+
+      <div class="form-group">
+          <label for="input1" class="col-sm-3 control-label">Batch</label>
+          <div class="col-sm-7">
+            <input type="text" name="st_batch"  class="form-control" id="input1" placeholder="batch e.x 2020" />
+          </div>
+      </div>
+
+      <div class="form-group">
+          <label for="input1" class="col-sm-3 control-label">Semester</label>
+          <div class="col-sm-7">
+            <input type="text" name="st_sem"  class="form-control" id="input1" placeholder="semester ex. Fall-15" />
+          </div>
+      </div>
+
+      <div class="form-group">
+          <label for="input1" class="col-sm-3 control-label">Email</label>
+          <div class="col-sm-7">
+            <input type="email" name="st_email"  class="form-control" id="input1" placeholder="valid email" />
+          </div>
+      </div>
+
+
+      <input type="submit" class="btn btn-primary col-md-2 col-md-offset-8" value="Add Student" name="std" />
+    </form>
+
+  </div>
+<br><br><br>
+  <div class="rowtwo" id="teacher">
+  
+
+       <form method="post" class="form-horizontal col-md-6 col-md-offset-3">
+        <h4>Add Teacher's Information</h4>
+      <div class="form-group">
+          <label for="input1" class="col-sm-3 control-label">Teacher ID</label>
+          <div class="col-sm-7">
+            <input type="text" name="tc_id"  class="form-control" id="input1" placeholder="teacher's id" />
+          </div>
+      </div>
+
+      <div class="form-group">
+          <label for="input1" class="col-sm-3 control-label">Name</label>
+          <div class="col-sm-7">
+            <input type="text" name="tc_name"  class="form-control" id="input1" placeholder="teacher full name" />
+          </div>
+      </div>
+
+      <div class="form-group">
+          <label for="input1" class="col-sm-3 control-label">Department</label>
+          <div class="col-sm-7">
+            <input type="text" name="tc_dept"  class="form-control" id="input1" placeholder="department ex. CSE" />
+          </div>
+      </div>
+
+      <div class="form-group">
+          <label for="input1" class="col-sm-3 control-label">Email</label>
+          <div class="col-sm-7">
+            <input type="email" name="tc_email"  class="form-control" id="input1" placeholder="valid email" />
+          </div>
+      </div>
+
+      <div class="form-group">
+          <label for="input1" class="col-sm-3 control-label">Subject Name</label>
+          <div class="col-sm-7">
+            <input type="text" name="tc_course"  class="form-control" id="input1" placeholder="subject ex. Software Engineering" />
+          </div>
+      </div>
+
+      <input type="submit" class="btn btn-primary col-md-2 col-md-offset-8" value="Add Teacher" name="tcr" />
+    </form>
+    
+  </div>
+
+
+</div><br>
+<!-- Contents, Tables, Forms, Images ended -->
 
 </center>
 </body>
+<!-- Body ended  -->
 </html>
